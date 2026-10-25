@@ -15,7 +15,7 @@ const weeks = [
 ]
 const sections = ['Unit Information', 'Forum', ...weeks.map(w => w.title), 'Assignments', 'Datasets']
 const initialOpen = ['Week 1']
-const fonts = ['Arial', 'Inter', 'Abel', 'Abyssinica SIL', 'Alan Sans', 'Atlast', 'Georgia', 'Verdana', 'Tahoma', 'OpenDyslexic']
+const fonts = ['Arial', 'Inter', 'Abel', 'Georgia', 'Verdana', 'Tahoma', 'OpenDyslexic']
 
 function Icon({ name, size = 19 }) {
   const paths = {
@@ -101,6 +101,42 @@ export default function App() {
       noticeTimer.current = null
     }, 3000)
   }
+  const [toolbarPosition, setToolbarPosition] = useState(null)
+  const dragOffset = useRef({ x: 0, y: 0 })
+
+  const startToolbarDrag = (e) => {
+    if (e.button !== 0) return
+
+    const toolbarElement = e.currentTarget.parentElement
+    const rect = toolbarElement.getBoundingClientRect()
+
+    dragOffset.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    }
+
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  const moveToolbarDrag = (e) => {
+    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return
+
+    const toolbarElement = e.currentTarget.parentElement
+    const width = toolbarElement.offsetWidth
+    const height = toolbarElement.offsetHeight
+
+    const x = Math.max(
+      0,
+      Math.min(window.innerWidth - width, e.clientX - dragOffset.current.x)
+    )
+
+    const y = Math.max(
+      0,
+      Math.min(window.innerHeight - height, e.clientY - dragOffset.current.y)
+    )
+
+    setToolbarPosition({ x, y })
+  }
   return <div className={`site ${focus ? 'focus-mode' : ''}`}>
     <header className="site-header">
       <div className="brand"><span>My</span> Murdoch Learning</div>
@@ -131,8 +167,100 @@ export default function App() {
         </div>
       </>}
     </main>
-    <div className={`accessibility ${focus ? 'in-focus' : ''}`}>
-      {!toolbar ? <button className="accessibility-tab" aria-label="Open accessibility toolbar" onClick={() => setToolbar(true)}>Accessibility <Icon name="font" size={17} /></button> : <div className="accessibility-bar"><label>Font type <select aria-label="Font type" value={font} onChange={e => setFont(e.target.value)}>{fonts.map(f => <option key={f}>{f}</option>)}</select></label><label>Font size <select aria-label="Font size" value={size} onChange={e => setSize(Number(e.target.value))}>{[10, 12, 14, 16, 18, 20, 22, 24, 28].map(n => <option key={n} value={n}>{n}</option>)}</select></label><div className="color-control"><button title="Text colour" aria-label="Text colour" onClick={() => { setFontColorOpen(!fontColorOpen); setHighlightOpen(false) }}><Icon name="font" /></button>{fontColorOpen && <div className="color-pop"><label>Text colour <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} /></label><div className="swatches">{['#111111', '#ff0000', '#0066cc', '#27833b', '#7c3aed'].map(c => <button key={c} style={{ background: c }} aria-label={`Set text colour ${c}`} onClick={() => { setTextColor(c); setFontColorOpen(false) }} />)}</div><button onClick={() => setTextColor('#111111')}>Reset</button></div>}</div><div className="color-control"><button title="Highlight colour" aria-label="Highlight colour" onClick={() => { setHighlightOpen(!highlightOpen); setFontColorOpen(false) }}><Icon name="marker" /></button>{highlightOpen && <div className="color-pop"><label>Highlight colour <input type="color" value={highlightColor} onChange={e => setHighlightColor(e.target.value)} /></label><div className="swatches">{['#ffff00', '#b4f0e7', '#ffd6d6', '#d8d2ff', '#ffffff'].map(c => <button key={c} style={{ background: c }} aria-label={`Set highlight colour ${c}`} onClick={() => { setHighlightColor(c); setHighlightOpen(false) }} />)}</div><button onClick={() => setHighlightColor('#ffff00')}>Reset</button></div>}</div><button title="Read this page" aria-label="Read this page" onClick={startSpeech}><Icon name="speech" /></button><button title="Focus mode" aria-label="Toggle focus mode" onClick={() => { setFocus(!focus); setLeftOpen(false); setRightOpen(false) }}><Icon name="expand" /></button><button title="Reset settings" aria-label="Reset settings" onClick={reset}><Icon name="reset" /></button><button title="Close toolbar" aria-label="Close toolbar" onClick={() => setToolbar(false)}><Icon name="close" /></button></div>}
+    <div
+      className={`accessibility ${focus ? 'in-focus' : ''} ${toolbarPosition ? 'is-dragged' : ''}`}
+      style={toolbarPosition ? {
+        left: toolbarPosition.x,
+        top: toolbarPosition.y,
+        right: 'auto',
+        transform: 'none'
+      } : undefined}
+    >
+      {!toolbar ? (
+        <button
+          className="accessibility-tab"
+          aria-label="Open accessibility toolbar"
+          onClick={() => setToolbar(true)}
+        >
+          Accessibility <Icon name="font" size={17} />
+        </button>
+      ) : (
+        <div className="accessibility-bar">
+          <button
+            type="button"
+            className="toolbar-drag-handle"
+            title="Drag to move toolbar"
+            aria-label="Drag to move accessibility toolbar"
+            onPointerDown={startToolbarDrag}
+            onPointerMove={moveToolbarDrag}
+          >
+            ⠿
+          </button>
+
+          <label>
+            Font type
+            <select aria-label="Font type" value={font} onChange={e => setFont(e.target.value)}>
+              {fonts.map(f => <option key={f}>{f}</option>)}
+            </select>
+          </label>
+
+          <label>
+            Font size
+            <select aria-label="Font size" value={size} onChange={e => setSize(Number(e.target.value))}>
+              {[10, 12, 14, 16, 18, 20, 22, 24, 28].map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </label>
+
+          <div className="color-control">
+            <button title="Text colour" aria-label="Text colour" onClick={() => { setFontColorOpen(!fontColorOpen); setHighlightOpen(false) }}>
+              <Icon name="font" />
+            </button>
+            {fontColorOpen && (
+              <div className="color-pop">
+                <label>Text colour <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} /></label>
+                <div className="swatches">
+                  {['#111111', '#ff0000', '#0066cc', '#27833b', '#7c3aed'].map(c => (
+                    <button key={c} style={{ background: c }} aria-label={`Set text colour ${c}`} onClick={() => { setTextColor(c); setFontColorOpen(false) }} />
+                  ))}
+                </div>
+                <button onClick={() => setTextColor('#111111')}>Reset</button>
+              </div>
+            )}
+          </div>
+
+          <div className="color-control">
+            <button title="Highlight colour" aria-label="Highlight colour" onClick={() => { setHighlightOpen(!highlightOpen); setFontColorOpen(false) }}>
+              <Icon name="marker" />
+            </button>
+            {highlightOpen && (
+              <div className="color-pop">
+                <label>Highlight colour <input type="color" value={highlightColor} onChange={e => setHighlightColor(e.target.value)} /></label>
+                <div className="swatches">
+                  {['#ffff00', '#b4f0e7', '#ffd6d6', '#d8d2ff', '#ffffff'].map(c => (
+                    <button key={c} style={{ background: c }} aria-label={`Set highlight colour ${c}`} onClick={() => { setHighlightColor(c); setHighlightOpen(false) }} />
+                  ))}
+                </div>
+                <button onClick={() => setHighlightColor('#ffff00')}>Reset</button>
+              </div>
+            )}
+          </div>
+
+          <button title="Read this page" aria-label="Read this page" onClick={startSpeech}>
+            <Icon name="speech" />
+          </button>
+          <button title="Focus mode" aria-label="Toggle focus mode" onClick={() => { setFocus(!focus); setLeftOpen(false); setRightOpen(false) }}>
+            <Icon name="expand" />
+          </button>
+          <button title="Reset settings" aria-label="Reset settings" onClick={reset}>
+            <Icon name="reset" />
+          </button>
+          <button title="Close toolbar" aria-label="Close toolbar" onClick={() => setToolbar(false)}>
+            <Icon name="close" />
+          </button>
+        </div>
+      )}
     </div>
     {speaking && <div className="speech-panel"><span>Read this page</span><button title="Restart" onClick={startSpeech}><Icon name="back" /></button><button title={paused ? 'Resume' : 'Pause'} onClick={pauseSpeech}><Icon name={paused ? 'play' : 'pause'} /></button><button title="Stop" onClick={stopSpeech}><Icon name="next" /></button><label>Speed: <select value={rate} onChange={changeRate}><option value="0.7">Slow</option><option value="1">Medium</option><option value="1.3">Fast</option></select></label></div>}
     {notice && <div className="notice" role="status">{notice}<button aria-label="Dismiss" onClick={() => setNotice('')}><Icon name="close" size={16} /></button></div>}
