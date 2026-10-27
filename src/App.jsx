@@ -311,8 +311,8 @@ export default function App() {
           </button>
         </div>
       )}
+      {toolbar && speaking && <div className="speech-panel"><span>Read selected text</span><button title="Restart" onClick={startSpeech}><Icon name="back" /></button><button title={paused ? 'Resume' : 'Pause'} onClick={pauseSpeech}><Icon name={paused ? 'play' : 'pause'} /></button><button title="Stop" onClick={stopSpeech}><Icon name="next" /></button><label>Speed: <select value={rate} onChange={changeRate}><option value="0.7">Slow</option><option value="1">Medium</option><option value="1.3">Fast</option></select></label></div>}
     </div>
-    {toolbar && speaking && <div className="speech-panel"><span>Read selected text</span><button title="Restart" onClick={startSpeech}><Icon name="back" /></button><button title={paused ? 'Resume' : 'Pause'} onClick={pauseSpeech}><Icon name={paused ? 'play' : 'pause'} /></button><button title="Stop" onClick={stopSpeech}><Icon name="next" /></button><label>Speed: <select value={rate} onChange={changeRate}><option value="0.7">Slow</option><option value="1">Medium</option><option value="1.3">Fast</option></select></label></div>}
     {notice && <div className="notice" role="status">{notice}<button aria-label="Dismiss" onClick={() => setNotice('')}><Icon name="close" size={16} /></button></div>}
     <style>{`.welcome ::selection { background: ${highlightColor}; color: ${textColor}; }`}</style>
   </div>

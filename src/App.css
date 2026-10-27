@@ -705,3 +705,12 @@
   .content-page .announcement-list button small { text-align: left; }
   .content-page .announcement-post { padding: 16px; }
 }
+
+/* Keep speech controls attached to the draggable accessibility toolbar. */
+.accessibility .speech-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+}
